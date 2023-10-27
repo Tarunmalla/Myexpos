@@ -1,0 +1,7 @@
+load --module 2 ../spl/spl_progs/mod2_19.xsm
+load --module 4 ../spl/spl_progs/mod4_19.xsm
+load --module 0 ../spl/spl_progs/mod0_19.xsm
+load --module 1 ../spl/spl_progs/mod1_19.xsm
+load --int=9 ../spl/spl_progs/int9_19.xsm
+load --exhandler ../spl/spl_progs/exception_19.xsm
+load --module 7 ../spl/spl_progs/bootmod_19.xsm

@@ -1,0 +1,5 @@
+load --module 1 ../spl/spl_progs/mod1_21.xsm
+load --module 7 ../spl/spl_progs/bootmod_21.xsm
+load --int=11 ../spl/spl_progs/int11_21.xsm
+load --int=15 ../spl/spl_progs/int15_21.xsm
+load --init ../expl/expl_progs/assign1_21.xsm

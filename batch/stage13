@@ -1,0 +1,9 @@
+load --init ../expl/expl_progs/assign112.xsm
+load --library ../expl/library.lib
+load --exhandler ../spl/spl_progs/haltprog.xsm
+load --int=10 ../spl/spl_progs/haltprog.xsm
+load --int=7 ../spl/spl_progs/int7.xsm
+load --idle ../expl/expl_progs/idle1.xsm
+load --module 7 ../spl/spl_progs/bootmod.xsm
+load --int=timer ../spl/spl_progs/timer12.xsm
+load --os ../spl/spl_progs/stage13os.xsm

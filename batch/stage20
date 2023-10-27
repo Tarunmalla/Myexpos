@@ -1,0 +1,6 @@
+load --module 1 ../spl/spl_progs/mod1_20.xsm
+load --module 7 ../spl/spl_progs/bootmod_20.xsm
+load --module 5 ../spl/spl_progs/mod5_20.xsm
+load --int=10 ../spl/spl_progs/int10_20.xsm
+load --int=8 ../spl/spl_progs/int8_20.xsm
+load --init ../expl/expl_progs/par_20.xsm

@@ -1,0 +1,9 @@
+load --init ../expl/expl_progs/bubblesort.xsm
+load --int=6 ../spl/spl_progs/int6_16.xsm
+load --module 4 ../spl/spl_progs/mod4_16.xsm
+load --module 5 ../spl/spl_progs/scheduler_14.xsm
+load --module 7 ../spl/spl_progs/bootmod_16.xsm
+load --module 0 ../spl/spl_progs/mod0_15.xsm
+load --int=7 ../spl/spl_progs/write_s15.xsm
+load --os ../spl/spl_progs/os_13.xsm
+load --int=console ../spl/spl_progs/consolint_16.xsm

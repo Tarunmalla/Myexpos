@@ -1,0 +1,5 @@
+load --module 7 ../spl/spl_progs/bootmod_23.xsm
+load --module 0 ../spl/spl_progs/mod0_23.xsm
+load --module 4 ../spl/spl_progs/mod4_23.xsm
+load --int=4 ../spl/spl_progs/int4_23.xsm
+load --int=15 ../spl/spl_progs/int15_23.xsm

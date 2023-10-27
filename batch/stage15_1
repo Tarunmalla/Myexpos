@@ -1,0 +1,5 @@
+load --module 4 ../spl/spl_progs/mod4_15.xsm
+load --module 0 ../spl/spl_progs/mod0_15_1.xsm
+load --module 7 ../spl/spl_progs/bootmod_15.xsm
+load --os ../spl/spl_progs/os_13.xsm
+load --int=7 ../spl/spl_progs/write_s15.xsm

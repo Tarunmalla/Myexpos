@@ -1,0 +1,6 @@
+load --module 1 ../spl/spl_progs/mod1_17.xsm
+load --module 2 ../spl/spl_progs/mod2_17.xsm
+load --module 7 ../spl/spl_progs/bootmod_17.xsm
+load --int=9 ../spl/spl_progs/int9_17.xsm
+load --init ../expl/expl_progs/stag17.xsm
+load --os ../spl/spl_progs/os_17.xsm

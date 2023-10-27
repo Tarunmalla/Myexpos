@@ -1,0 +1,6 @@
+load --module 1 ../spl/spl_progs/mod1_22.xsm
+load --module 0 ../spl/spl_progs/mod0_22.xsm
+load --int=14 ../spl/spl_progs/int14_22.xsm
+load --int=13 ../spl/spl_progs/int13_22.xsm
+load --int=8 ../spl/spl_progs/int8_22.xsm
+load --module 7 ../spl/spl_progs/bootmod_22.xsm

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ $1 ==  *.spl ]] then
+cd $HOME/myexpos/spl
+./spl spl_progs/$1
+fi
+
+if [[ $1 == *.expl ]] then
+cd $HOME/myexpos/expl
+./expl expl_progs/$1
+fi

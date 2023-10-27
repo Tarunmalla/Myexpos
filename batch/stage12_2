@@ -1,0 +1,4 @@
+load --idle $HOME/myexpos/expl/expl_progs/idle1.xsm
+load --init $HOME/myexpos/expl/expl_progs/assign112.xsm
+load --int=timer $HOME/myexpos/spl/spl_progs/timer112.xsm
+load --os $HOME/myexpos/spl/spl_progs/assign112.xsm

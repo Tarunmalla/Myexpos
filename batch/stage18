@@ -1,0 +1,5 @@
+load --module 4 ../spl/spl_progs/mod4_18.xsm
+load --module 0 ../spl/spl_progs/mod0_18.xsm
+load --int=disk ../spl/spl_progs/diskint.xsm
+load --int=9 ../spl/spl_progs/int9_18.xsm
+load --module 7 ../spl/spl_progs/bootmod_18.xsm
