@@ -1,0 +1,55 @@
+alias func_name R1;
+alias curr_PID R2;
+alias num R3;
+alias page_num R4;
+alias block_num R5;
+
+if(func_name == 3) then
+ multipush(R1,R2,R3);
+   R1=8;
+   R2=[SYSTEM_STATUS_TABLE+1];
+ call MOD_0;
+ multipop(R1,R2,R3);
+ print num;
+ multipush(R1,R2,R3);
+   R1=9;
+   R2=[SYSTEM_STATUS_TABLE+1];
+   call MOD_0;
+   multipop(R1,R2,R3);
+   return;
+endif;
+
+if(func_name==4)then
+  multipush(R1,R2,R3);
+  R1=8;
+  R2=curr_PID;
+  call MOD_0;
+  multipop(R1,R2,R3);
+  read;
+  [PROCESS_TABLE+(curr_PID)*16+4]=WAIT_TERMINAL;
+  multipush(R1,R2,R3);
+   call MOD_5;
+   multipop(R1,R2,R3);
+   [[PTBR + 2*(num/512)]*512 + num%512] = [PROCESS_TABLE + curr_PID*16 + 8];
+   return;
+ endif;
+ 
+ if(func_name == 2) then
+   backup;
+   R1=3;
+   R2=curr_PID;
+   call MOD_0;
+   restore;
+   [DISK_STATUS_TABLE+0]=1;
+   [DISK_STATUS_TABLE+1]=1;
+   [DISK_STATUS_TABLE+2]=page_num;
+   [DISK_STATUS_TABLE+3]=block_num;
+   [DISK_STATUS_TABLE+4]=curr_PID;
+   load(page_num,block_num);
+   [PROCESS_TABLE + 16*curr_PID + 4] = WAIT_DISK;
+   backup;
+   call MOD_5;
+   restore;
+   return;
+ endif;
+   

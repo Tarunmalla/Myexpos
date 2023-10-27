@@ -1,0 +1,23 @@
+alias func_name R1;
+alias curr_PID R2;
+alias num R3;
+if(func_name == 3) then
+ //multipush(R1,R2,R3);
+ backup;
+   R1=8;
+   R2=curr_PID;
+ call MOD_0;
+ restore;
+// multipop(R1,R2,R3);
+ print num;
+ //multipush(R1,R2,R3);
+ backup;
+   R1=9;
+   R2=curr_PID;
+   call MOD_0;
+   //multipop(R1,R2,R3);
+   restore;
+   return;
+else
+   return;
+ endif;

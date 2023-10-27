@@ -1,0 +1,2 @@
+load --int=timer ../spl/spl_progs/timer9.xsm
+load --os ../spl/spl_progs/stage9os.xsm

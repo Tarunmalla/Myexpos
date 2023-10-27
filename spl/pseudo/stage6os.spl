@@ -1,0 +1,17 @@
+loadi(4,7);
+loadi(5,8);
+loadi(22,35);
+loadi(23,36);
+loadi(2, 15);
+loadi(3, 16);
+PTBR = PAGE_TABLE_BASE;
+PTLR = 3;
+[PTBR+0] = 4;
+[PTBR+1] = "0100";
+[PTBR+2] = 5;
+[PTBR+3] = "0100";
+[PTBR+4] = 8;
+[PTBR+5] = "0110";
+[8*512] = 0;
+SP = 2*512;
+ireturn; 

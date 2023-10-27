@@ -1,0 +1,110 @@
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+
+
+alias userSp R1;
+alias syscallNum R2;
+alias ptbr R3;
+
+ptbr = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 14];
+userSp = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+syscallNum = [[ptbr + 2 * ((userSp - 5)/512)] * 512 + ((userSp - 5)%512)];
+
+
+
+//semlock
+if(syscallNum == 19) then
+
+	[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 19;
+	
+	alias userAreaPage R4;
+	alias iter R5;
+	alias semDesc R6;
+	
+	userAreaPage = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11];
+	
+	
+	semDesc = [[ptbr + 2 * ((userSp - 4)/512)] * 512 + ((userSp - 4)%512)];
+	
+	if( semDesc > 7 || semDesc < 0 || [(userAreaPage + 1) * 512 - 16 + 2*semDesc] == - 1) then
+		[[ptbr + 2 * ((userSp - 1)/512)] * 512 + ((userSp - 1)%512)] = -1;
+		[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1]* 16) + 9] = 0;
+		SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+		ireturn;
+	endif;
+	
+	
+	while([SEMAPHORE_TABLE + ([(userAreaPage + 1) * 512 - 16 + 2*semDesc + 1] * 4)] != -1 && [SEMAPHORE_TABLE + ([(userAreaPage + 1) * 512 - 16 + 2*semDesc + 1] * 4)] != [SYSTEM_STATUS_TABLE + 1]) do
+		[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 4] = WAIT_SEMAPHORE;
+		[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 5] = [((userAreaPage) * 512) + 496 + 2*semDesc + 1];
+		
+		multipush(R0,R1,R2,R3,R4,R5,R6);
+		call MOD_5;
+		multipop(R0,R1,R2,R3,R4,R5,R6);
+	endwhile;
+	
+	
+	[SEMAPHORE_TABLE + ([(userAreaPage + 1) * 512 - 16 + 2*semDesc + 1] * 4)] = [SYSTEM_STATUS_TABLE + 1];
+	
+	[[ptbr + 2 * ((userSp - 1)/512)] * 512 + ((userSp - 1)%512)] = 0;
+	[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1]* 16) + 9] = 0;
+	SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+	ireturn;
+	
+endif;
+
+
+//semunlock
+if(syscallNum == 20) then
+
+	[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 20;
+	
+	alias userAreaPage R4;
+	alias iter R5;
+	alias semDesc R6;
+	
+	userAreaPage = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11];
+	
+	
+	semDesc = [[ptbr + 2 * ((userSp - 4)/512)] * 512 + ((userSp - 4)%512)];
+	
+	if( semDesc > 7 || semDesc < 0 || [(userAreaPage + 1) * 512 - 16 + 2*semDesc] == - 1) then
+		[[ptbr + 2 * ((userSp - 1)/512)] * 512 + ((userSp - 1)%512)] = -1;
+		[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1]* 16) + 9] = 0;
+		SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+		ireturn;
+	endif;
+	
+	if([SEMAPHORE_TABLE + ([(userAreaPage + 1) * 512 - 16 + 2*semDesc + 1] * 4)] != -1) then
+		if([SEMAPHORE_TABLE + ([(userAreaPage + 1) * 512 - 16 + 2*semDesc + 1] * 4)] != [SYSTEM_STATUS_TABLE + 1]) then
+			[[ptbr + 2 * ((userSp - 1)/512)] * 512 + ((userSp - 1)%512)] = -2;
+			[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1]* 16) + 9] = 0;
+			SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+			ireturn;
+		endif;
+		
+		
+		[SEMAPHORE_TABLE + ([(userAreaPage + 1) * 512 - 16 + 2*semDesc + 1] * 4)] = -1;
+		
+		iter = 0;
+		while(iter < 16) do
+			if([PROCESS_TABLE + iter*16 + 4] == WAIT_SEMAPHORE && [PROCESS_TABLE + iter*16 + 5] == [(userAreaPage) * 512 + 496 + 2*semDesc + 1]) then
+				[PROCESS_TABLE + iter*16 + 4] = READY;
+			endif;
+			iter = iter + 1;
+		endwhile;
+		
+	endif;
+	
+	[[ptbr + 2 * ((userSp - 1)/512)] * 512 + ((userSp - 1)%512)] = 0;
+	[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
+	SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+	ireturn;
+	
+	
+endif;
+
+
+
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+ireturn;
