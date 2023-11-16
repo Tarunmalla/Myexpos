@@ -1,0 +1,42 @@
+//SETTING MODE FLAG FIELD which indicates if execution is in user mode, exception handler or system call.
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 5;
+
+alias userSp R0;
+userSp = SP;
+
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16) + 13] = SP;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1]* 16) + 11] * 512 - 1;
+
+alias physicalPageNum R1;
+alias offset R2;
+alias fileDescPhysicalAddr R3;
+
+physicalPageNum = [PTBR + 2 * ((userSp - 4)/512)];
+offset = (userSp - 4)%512;
+fileDescPhysicalAddr = (physicalPageNum * 512) + offset;
+alias fileDescriptor R4;
+fileDescriptor = [fileDescPhysicalAddr];
+//print "REACHED HERE";
+
+if(fileDescriptor != -2)
+then
+	alias physicalAddrRetVal R5;
+	physicalAddrRetVal = ([PTBR + 2* ((userSp - 1) / 512)] * 512) + ((userSp - 1) % 512);
+	[physicalAddrRetVal] = -1;
+else
+	alias word R5;
+	word = [[PTBR + 2*((userSp-3)/512)] * 512 +((userSp - 3)%512)];
+	print word;
+
+	alias physicalAddrRetVal R6;
+	physicalAddrRetVal = ([PTBR + 2*((userSp - 1)/512)] * 512) + ((userSp - 1) % 512);
+	[physicalAddrRetVal] = 0;
+endif;
+
+SP = userSp;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+
+ireturn;
+
+ 

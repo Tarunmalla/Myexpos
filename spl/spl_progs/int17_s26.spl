@@ -1,0 +1,93 @@
+//INT 17 - LOGIN
+//print("INT17");
+
+
+
+alias userSp R1;
+alias pte R2;
+alias currentPID R3;
+alias retAddr R4;
+alias username R5;
+alias pwd R6;
+alias iter R7;
+
+userSp = SP;
+pte = PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1]*16;
+currentPID = [SYSTEM_STATUS_TABLE + 1];
+retAddr = [[pte + 14] + 2*((userSp-1)/512)] * 512 + ((userSp - 1)%512);
+username = [[[pte + 14] + 2*((userSp-4)/512)] * 512 + ((userSp - 4)%512)];
+pwd = [[[pte + 14] + 2*((userSp-3)/512)] * 512 + ((userSp - 3)%512)];
+
+//setting the mode flag
+[pte + 9] = 27;
+[pte + 13] = SP;
+SP = [pte + 11] * 512 - 1;
+
+
+//if the current PID is not 1
+if(currentPID != 1) then
+	[retAddr] = -2;
+	SP = [pte + 13];
+	[pte + 9] = 0;
+	ireturn;
+endif;
+
+//getting the user table entry
+alias user_tb_entry R8;
+iter = 0;
+while(iter < MAX_USER_NUM) do
+	if(username == [USER_TABLE + 2*iter]) then
+		user_tb_entry = USER_TABLE + 2*iter;
+		break;
+	endif;
+	iter = iter + 1;
+endwhile;
+
+
+//user table entry doesn't exist
+if(iter == MAX_USER_NUM) then
+	[retAddr] = -1;
+	SP = [pte + 13];
+	[pte + 9] = 0;
+	ireturn;
+endif;
+
+//encrypting password
+encrypt pwd;
+
+if([user_tb_entry + 1] != pwd) then
+	[retAddr] = -1;
+	SP = [pte + 13];
+	[pte + 9] = 0;
+	ireturn;
+endif;
+
+//setting process table entry of shell
+[PROCESS_TABLE + 2*16 + 4] = CREATED;
+[PROCESS_TABLE + 2*16 + 3] = iter; //setting user id
+
+//setting state of login process
+[pte + 4] = WAIT_PROCESS;
+[pte + 5] = 2;
+
+//setting user id field in system status table
+[SYSTEM_STATUS_TABLE] = iter;
+
+multipush(R1,R2,R3,R4,R5,R6,R7,R8);
+call MOD_5;
+multipop(R1,R2,R3,R4,R5,R6,R7,R8);
+
+[retAddr] = 0;
+SP = [pte + 13];
+[pte + 9] = 0;
+ireturn;
+
+
+
+
+
+
+
+
+
+

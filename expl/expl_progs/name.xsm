@@ -1,0 +1,21 @@
+0
+2056
+0
+0
+0
+0
+0
+0
+MOV R0, "Joel Mathew"
+MOV R1, 5
+PUSH R1
+MOV R2, -2
+PUSH R2
+PUSH R0
+PUSH R2
+PUSH R2
+
+INT 7
+JUMP 2056
+
+HALT

@@ -1,0 +1,6 @@
+load --exec ../expl/expl_progs/ls.xsm
+load --exec ../expl/expl_progs/rm.xsm
+load --exec ../expl/expl_progs/cp.xsm
+load --exec ../expl/expl_progs/cat.xsm
+load --exec ../expl/expl_progs/lu.xsm
+load --exec ../expl/expl_progs/ru.xsm

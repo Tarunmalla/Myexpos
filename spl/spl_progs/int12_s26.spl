@@ -1,0 +1,64 @@
+//INT 12 - Logout
+//print("INT12");
+
+
+
+alias userSp R1;
+alias pte R2;
+alias currentPID R3;
+alias retAddr R4;
+alias iter R5;
+
+userSp = SP;
+pte = PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1]*16;
+currentPID = [SYSTEM_STATUS_TABLE + 1];
+retAddr = [[pte + 14] + 2*((userSp-1)/512)] * 512 + ((userSp - 1)%512);
+
+//setting the mode flag
+[pte + 9] = 28;
+[pte + 13] = SP;
+SP = [pte + 11] * 512 - 1;
+
+//if the current PID is not the shell
+if(currentPID != 2) then
+	[retAddr] = -1;
+	SP = [pte + 13];
+	[pte + 9] = 0;
+	ireturn;
+endif;
+
+
+//call kill all
+multipush(R1,R2,R3,R4,R5);
+R1 = 5;
+R2 = currentPID;
+call MOD_1;
+multipop(R1,R2,R3,R4,R5);
+
+
+
+//setting state of shell to terminated
+[pte + 4] = TERMINATED;
+
+
+//setting the top of the stack to the entry of the shell program
+[[[pte+14] + 16]*512] = [[[pte+14] + 8]*512 + 1];
+[pte + 13] = 8*512;
+//SP = 8*512;
+
+
+
+//setting the state of login process to ready
+[PROCESS_TABLE + 16 + 4] = READY;
+
+//set the current user id field back to kernel(0)
+[SYSTEM_STATUS_TABLE] = 0;
+
+
+
+call MOD_5;
+
+
+
+
+

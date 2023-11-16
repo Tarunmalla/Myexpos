@@ -1,0 +1,19 @@
+int main(){
+
+	decl
+		str name;
+		int temp;
+	enddecl
+	
+	
+	begin
+	
+	
+		temp = exposcall("Read",-1,name);
+		temp = exposcall("Delete",name);
+		
+		return 0;
+	
+	end
+
+}

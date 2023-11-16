@@ -1,0 +1,31 @@
+load --os $HOME/myexpos/spl/spl_progs/os_startup_27.xsm
+load --exhandler $HOME/myexpos/spl/spl_progs/exhandler_19.xsm
+load --int=timer $HOME/myexpos/spl/spl_progs/timer_27.xsm
+load --int=console $HOME/myexpos/spl/spl_progs/console_16.xsm
+load --int=disk $HOME/myexpos/spl/spl_progs/disk_18.xsm 
+load --init $HOME/myexpos/expl/expl_progs/login.xsm
+load --idle $HOME/myexpos/expl/expl_progs/idle_program.xsm
+load --shell $HOME/myexpos/expl/expl_progs/shell.xsm
+load --int=4 $HOME/myexpos/spl/spl_progs/int4_s23.xsm
+load --int=5 $HOME/myexpos/spl/spl_progs/int5_s25.xsm
+load --int=6 $HOME/myexpos/spl/spl_progs/int6_s24.xsm
+load --int=7 $HOME/myexpos/spl/spl_progs/int7_s25.xsm
+load --int=8 $HOME/myexpos/spl/spl_progs/int8_s24.xsm
+load --int=9 $HOME/myexpos/spl/spl_progs/int9_s19.xsm
+load --int=10 $HOME/myexpos/spl/spl_progs/int10_s20.xsm
+load --int=11 $HOME/myexpos/spl/spl_progs/int11_s21.xsm
+load --int=12 $HOME/myexpos/spl/spl_progs/int12_s26.xsm
+load --int=13 $HOME/myexpos/spl/spl_progs/int13_s22.xsm
+load --int=14 $HOME/myexpos/spl/spl_progs/int14_s22.xsm
+load --int=15 $HOME/myexpos/spl/spl_progs/int15_s26.xsm
+load --int=16 $HOME/myexpos/spl/spl_progs/int16_s26.xsm
+load --int=17 $HOME/myexpos/spl/spl_progs/int17_s26.xsm
+load --module 0 $HOME/myexpos/spl/spl_progs/module0_s24.xsm
+load --module 1 $HOME/myexpos/spl/spl_progs/module1_s25.xsm
+load --module 2 $HOME/myexpos/spl/spl_progs/module2_s27.xsm
+load --module 3 $HOME/myexpos/spl/spl_progs/module3_s25.xsm
+load --module 4 $HOME/myexpos/spl/spl_progs/module4_s23.xsm
+load --module 5 $HOME/myexpos/spl/spl_progs/module5_s27.xsm
+load --module 6 $HOME/myexpos/spl/spl_progs/module6_s27.xsm
+load --module 7 $HOME/myexpos/spl/spl_progs/boot_module_27.xsm
+load --library $HOME/myexpos/expl/library.lib

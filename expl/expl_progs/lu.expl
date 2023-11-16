@@ -1,0 +1,22 @@
+int main()
+{
+	decl
+		str data;
+		int temp,a,fileDesc,i;
+	enddecl
+
+	begin
+		
+
+		a = 1;
+		while(a<16) do
+			temp = exposcall("Getuname",a);
+			if(temp != -1) then
+				temp = exposcall("Write",-2,temp);
+			endif;
+			a = a + 1;
+		endwhile;
+		
+		return 0;
+	end
+}

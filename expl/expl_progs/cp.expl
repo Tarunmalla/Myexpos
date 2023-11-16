@@ -1,0 +1,36 @@
+int main()
+{
+	decl
+		str f1name,f2name,data;
+		int temp,a,f1,f2,perm;
+	enddecl
+
+	begin
+		temp = exposcall("Read", -1, f1name);
+		temp = exposcall("Read", -1, f2name);
+		
+		temp = exposcall("Write",-2,"PERMISSION");
+		temp = exposcall("Read",-1,perm); 
+		
+		
+		f1 = exposcall("Open",f1name);
+		
+		temp = exposcall("Create",f2name,perm);
+		f2 = exposcall("Open",f2name);
+		
+
+		
+		
+		a = exposcall("Seek",f1,0);
+		a = exposcall("Read",f1,data);
+		while(a != -2) do
+			temp = exposcall("Write",f2,data);
+			a = exposcall("Read",f1,data);
+		endwhile;
+		
+		temp = exposcall("Close",f1);
+		temp = exposcall("Close",f2);
+		
+		return 0;
+	end
+}

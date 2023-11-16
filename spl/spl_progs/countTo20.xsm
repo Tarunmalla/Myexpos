@@ -1,0 +1,14 @@
+MOV R0, 0
+MOV R2, 20
+
+	MOV R1, R0
+	GT R1, R2
+	JNZ R1,530
+	PORT P1, R0
+	OUT
+	INR R0
+	JMP 516
+
+HALT
+
+

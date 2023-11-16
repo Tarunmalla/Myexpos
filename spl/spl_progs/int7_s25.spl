@@ -1,0 +1,175 @@
+//SETTING MODE FLAG FIELD which indicates if execution is in user mode, exception handler or system call.
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 5;
+
+alias userSp R1;
+userSp = SP;
+
+
+
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16) + 13] = SP;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1]* 16) + 11] * 512 - 1;
+
+alias fileDescriptor R5;
+fileDescriptor = [([PTBR + 2* ((userSp - 4) / 512)] * 512) + ((userSp - 4) % 512)];
+
+alias physicalAddrRetVal R6;
+physicalAddrRetVal = ([PTBR + 2* ((userSp - 1) / 512)] * 512) + ((userSp - 1) % 512);
+
+alias word R7;
+word = [[PTBR + 2*((userSp-3)/512)] * 512 +((userSp - 3)%512)];
+
+alias p_mode R8;
+p_mode = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9;
+
+
+if(fileDescriptor != -2)
+then
+	
+	//if file descriptor is not valid
+	if(fileDescriptor < 0 || fileDescriptor > 7) then
+		[physicalAddrRetVal] = -1;
+		SP = userSp;
+		[p_mode] = 0;
+		ireturn;
+	endif;
+	
+	alias per_process_entry R9;
+	per_process_entry = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1]*16 + 11] * 512 + 496 + 2*fileDescriptor;
+	
+	//if per-process table entry is not a FILE
+	if([per_process_entry] != FILE) then
+		[physicalAddrRetVal] = -1;
+		SP = userSp;
+		[p_mode] = 0;
+		ireturn;
+	endif;
+	
+	alias open_ft_index R10;
+	alias inode_index R11;
+	
+	open_ft_index = [per_process_entry + 1];
+	inode_index = [OPEN_FILE_TABLE + open_ft_index*4];
+	
+	
+	alias userID R12;
+	alias inode_entry R13;
+	userID = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3];
+	inode_entry = INODE_TABLE + inode_index*16;
+	
+	//current user is not root and doesnt own file
+	if(userID != 1 && userID != [inode_entry + 3] && [inode_entry + 4] == 0) then
+		[physicalAddrRetVal] = -3;
+		SP = userSp;
+		[p_mode] = 0;
+		ireturn;
+	endif;
+	
+	//acquire inode
+	multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13);
+	R1 = 4;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = inode_index;
+	call MOD_0;
+	multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13);
+	
+	
+	if(R0 == -1) then
+		[physicalAddrRetVal] = -1;
+		SP = userSp;
+		[p_mode] = 0;
+		ireturn;
+	endif;
+	
+	alias lseek R14;
+	lseek = [OPEN_FILE_TABLE + open_ft_index*4 + 2];
+	
+	if(lseek == MAX_FILE_SIZE) then
+		//release inode
+		multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+		R1 = 5;
+		R2 = [SYSTEM_STATUS_TABLE + 1];
+		R3 = inode_index;
+		call MOD_0;
+		multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+			
+		[physicalAddrRetVal] = -2;
+		SP = userSp;
+		[p_mode] = 0;
+		ireturn;
+	endif;
+	
+	if(lseek%512 == 0 && lseek == [inode_entry + 2]) then
+		
+		//get free block
+		multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+		R1 = 3;
+		call MOD_2;
+		multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+		
+		if(R0 == -1) then
+			//release inode
+			multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+			R1 = 5;
+			R2 = [SYSTEM_STATUS_TABLE + 1];
+			R3 = inode_index;
+			call MOD_0;
+			multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+			
+			[physicalAddrRetVal] = -2;
+			SP = userSp;
+			[p_mode] = 0;
+			ireturn;
+		endif;
+		
+		[inode_entry + 8 + (lseek/512)] = R0;
+		
+	endif;
+	
+	
+	//buffered write
+	multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+	R1 = 1;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = [INODE_TABLE + inode_index* 16 + 8 + lseek/512];
+	R4 = lseek%512;
+	R5 = word;
+	call MOD_3;
+	multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+
+	
+	if(lseek == [inode_entry + 2]) then
+		[inode_entry + 2] = [inode_entry + 2] + 1;
+		[ROOT_FILE + inode_index*8 + 1] = [ROOT_FILE + inode_index*8 + 1] + 1;
+	endif;
+		
+	[OPEN_FILE_TABLE + open_ft_index*4 + 2] = [OPEN_FILE_TABLE + open_ft_index*4 + 2] + 1;
+	
+	//release inode
+	multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+	R1 = 5;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = inode_index;
+	call MOD_0;
+	multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14);
+	
+	
+else
+	
+	
+	multipush(R1,R2,R3,R4,R5,R6,R7,R8);
+	R1 = 3;
+	R2 = [SYSTEM_STATUS_TABLE+1];
+	R3 = word;
+	call MOD_4;
+	multipop(R1,R2,R3,R4,R5,R6,R7,R8);
+	
+endif;
+
+[physicalAddrRetVal] = 0;
+SP = userSp;
+[p_mode] = 0;
+
+ireturn;
+
+ 

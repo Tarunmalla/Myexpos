@@ -1,0 +1,121 @@
+//load exception handler routine from disk to memory
+loadi(2, 15);
+loadi(3, 16);
+
+//load timer interrupt
+loadi(4,17);
+loadi(5,18);
+
+//load console interrupt
+loadi(8,21);
+loadi(9,22);
+
+//load INT 6
+loadi(14,27);
+loadi(15,28);
+
+//load INT7 
+loadi(16,29);
+loadi(17,30);
+
+//load INT 10 module from disk to memory
+loadi(22,35);
+loadi(23,36);
+
+//load the library code
+loadi(63,13);
+loadi(64,14);
+
+//load the timer ISR
+loadi(50,63);
+loadi(51,64);
+
+//load MOD 4
+loadi(48,61);
+loadi(49,62);
+
+//load MOD 0
+loadi(40,53);
+loadi(41,54);
+
+//load the init program
+loadi(65,7);
+loadi(66,8);
+
+
+
+
+
+[TERMINAL_STATUS_TABLE] = 0;
+
+
+//---------------------------------- INIT PROGRAM --------------------------
+
+PTBR = PAGE_TABLE_BASE+20;
+PTLR = 10;
+
+alias ProcessTableEntry R1;
+ProcessTableEntry = PROCESS_TABLE + 16;
+
+//Adding data to process table
+[ProcessTableEntry + 11] = 80; //Set the user area page physical address to 80
+[ProcessTableEntry + 1] = 1; // First process, so set the PID to 1
+[ProcessTableEntry + 4] = CREATED;
+[ProcessTableEntry + 13] = 8*512;
+[ProcessTableEntry + 12] = 0;
+[ProcessTableEntry + 14] = PTBR;
+[ProcessTableEntry + 15] = PTLR;
+
+//setting up the logical pages to link to physical address
+
+//library
+[PTBR+0] = 63;
+[PTBR+1] = "0100";
+[PTBR+2] = 64;
+[PTBR+3] = "0100";
+
+//heap
+[PTBR+4] = 78;
+[PTBR+5] = "0110";
+[PTBR+6] = 79;
+[PTBR+7] = "0110";
+
+//Code
+[PTBR+8] = 65;
+[PTBR+9] = "0100";
+[PTBR+10] = 66;
+[PTBR+11] = "0100";
+[PTBR+12] = -1;
+[PTBR+13] = "0000";
+[PTBR+14] = -1;
+[PTBR+15] = "0000";
+
+//Stack
+[PTBR+16] = 76;
+[PTBR+17] = "0110";
+[PTBR+18] = 77;
+[PTBR+19] = "0110";
+
+//Setting top of stack to the second word in header
+[76*512] = [65*512 + 1];
+
+
+
+//----------------------------- SETTING ALL OTHER PROCESS STATUS TO TERMINATED --------------
+[PROCESS_TABLE + 36] = TERMINATED;
+[PROCESS_TABLE + 52] = TERMINATED;
+[PROCESS_TABLE + 68] = TERMINATED;
+[PROCESS_TABLE + 84] = TERMINATED;
+[PROCESS_TABLE + 100] = TERMINATED;
+[PROCESS_TABLE + 116] = TERMINATED;
+[PROCESS_TABLE + 132] = TERMINATED;
+[PROCESS_TABLE + 148] = TERMINATED;
+[PROCESS_TABLE + 164] = TERMINATED;
+[PROCESS_TABLE + 180] = TERMINATED;
+[PROCESS_TABLE + 196] = TERMINATED;
+[PROCESS_TABLE + 212] = TERMINATED;
+[PROCESS_TABLE + 228] = TERMINATED;
+[PROCESS_TABLE + 244] = TERMINATED;
+
+
+return;

@@ -1,0 +1,216 @@
+//print "INT5";
+
+alias syscallNum R1;
+alias pte R2;
+alias userSp R3;
+alias ptbr R4;
+alias retAddr R5;
+
+
+//process-table entry
+pte = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16);
+ptbr = [pte + 14];
+
+//switching to kernel stack
+userSp = SP;
+[pte + 13] = SP;
+SP = [pte + 11] * 512 - 1;
+
+//getting the syscall Num
+syscallNum = [[ptbr + 2*((userSp - 5)/512)] * 512 + (userSp - 5)%512]; 
+ 
+
+//saving the retAddr in a register
+retAddr = [ptbr + 2*((userSp - 1)/512)] * 512 + (userSp - 1)%512;
+
+//open
+if(syscallNum == 2) then
+
+	alias fileName R6;
+	fileName = [[ptbr + 2*((userSp - 4)/512)] * 512 + (userSp - 4)%512];
+	
+	
+	alias iter R7;
+
+	//Setting mode flag to 2
+	[pte + 9] = 2;
+	
+	//getting a free entry from per-process resource table
+	iter = 0;
+	while(iter < 8) do
+		if([([pte + 11] * 512) + 496 + 2*iter] == -1) then
+			break;
+		endif;
+		iter = iter + 1;
+	endwhile;
+	
+	//if no free entry exists case
+	if(iter == 8) then
+		[retAddr] = -3;
+		[pte + 9] = 0;
+		SP = [pte + 13];
+		ireturn;
+	endif;
+	
+	
+	//calling open
+	multipush(R1,R2,R3,R4,R5,R6,R7);
+	R1 = 3;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = fileName;
+	call MOD_3;
+	multipop(R1,R2,R3,R4,R5,R6,R7);
+
+	
+	
+	//return error code if its an error
+	if(R0 < 0) then
+		[retAddr] = R0;
+		[pte + 9] = 0;
+		SP = [pte + 13];
+		ireturn;
+	endif;
+	
+	//setting per-process resource table entries
+	[([pte + 11] * 512) + 496 + 2*iter] = FILE;
+	[([pte + 11] * 512) + 496 + 2*iter + 1] = R0;
+	
+	
+	[retAddr] = iter;
+	[pte + 9] = 0;
+	SP = [pte + 13];
+	ireturn;
+	
+	
+	
+endif;
+
+
+
+//close(3) or seek(6)
+if(syscallNum == 3 || syscallNum == 6) then
+
+	alias fileDesc R6;
+	fileDesc = [[ptbr + 2*((userSp - 4)/512)] * 512 + (userSp - 4)%512];
+
+	alias offset R7;
+	offset = [[ptbr + 2*((userSp - 3)/512)] * 512 + (userSp - 3)%512];
+	
+	//change the mode flag
+	[pte + 9] = syscallNum;
+	
+	//invalid file descriptor
+	if(fileDesc < 0 || fileDesc > 7) then
+		[retAddr] = -1;
+		[pte + 9] = 0;
+		SP = [pte + 13];
+		ireturn;
+	endif;
+	
+	//invalid per-process resource table entry
+	if([([pte + 11] * 512) + 496 + 2*fileDesc] == -1 || [([pte + 11] * 512) + 496 + 2*fileDesc] != FILE) then
+		[retAddr] = -1;
+		[pte + 9] = 0;
+		SP = [pte + 13];
+		ireturn;
+	endif;
+	
+	//get open file table index
+	alias open_ft_index R8;
+	open_ft_index = [([pte + 11] * 512) + 496 + 2*fileDesc + 1];
+	
+	if(syscallNum == 6) then
+		
+		alias inode_index R9;
+		inode_index = [OPEN_FILE_TABLE + open_ft_index*4];
+	
+		//acquire inode
+		multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9);
+		R1 = 4;
+		R2 = [SYSTEM_STATUS_TABLE + 1];
+		R3 = inode_index;
+		call MOD_0;
+		multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9);
+	
+	
+		if(R0 == -1) then
+			[retAddr] = -1;
+			[pte + 9] = 0;
+			SP = [pte + 13];
+			ireturn;
+		endif;
+	
+		alias lseek R10;
+		alias fileSize R11;
+		lseek = OPEN_FILE_TABLE + open_ft_index*4 + 2;
+	
+		if(inode_index == INODE_ROOT) then
+			fileSize = 480;
+		else
+			fileSize = [INODE_TABLE + inode_index * 16 + 2];
+		endif;
+	
+		if([lseek] + offset < 0) then
+		
+			//release inode
+			multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11);
+			R1 = 5;
+			R2 = [SYSTEM_STATUS_TABLE + 1];
+			R3 = inode_index;
+			call MOD_0;
+			multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11);
+			
+			[retAddr] = -2;
+			[pte + 9] = 0;
+			SP = [pte + 13];
+			ireturn;
+		endif;
+	
+	
+		if(offset == 0) then
+			[lseek] = 0;
+		else
+			if([lseek] + offset > fileSize) then
+				[lseek] = fileSize;
+			else
+				[lseek] = [lseek] + offset;
+			endif;
+		endif;
+	
+	
+		//release inode
+		multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11);
+		R1 = 5;
+		R2 = [SYSTEM_STATUS_TABLE + 1];
+		R3 = inode_index;
+		call MOD_0;
+		multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11);
+		
+		
+	else
+	
+		//close - file manager module
+		multipush(R1,R2,R3,R4,R5,R6,R7,R8);
+		R1 = 4;
+		R2 = [SYSTEM_STATUS_TABLE + 1];
+		R3 = open_ft_index;
+		call MOD_3;
+		multipop(R1,R2,R3,R4,R5,R6,R7,R8);
+	
+	
+		//invalidate per-process resource table entry
+		[([pte + 11] * 512) + 496 + 2*fileDesc] = -1;
+		[([pte + 11] * 512) + 496 + 2*fileDesc + 1] = -1;
+			
+	endif;
+	
+	
+	
+	[retAddr] = 0;
+	[pte + 9] = 0;
+	SP = [pte + 13];
+	ireturn;
+	
+endif;
+
+

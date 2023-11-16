@@ -1,0 +1,13 @@
+alias counter R0;
+alias sum R1;
+alias prod R2;
+
+sum = 0;
+counter = 0;
+
+while(counter <= 20) do
+	R2 = counter*counter;
+	sum = sum + R2;
+	counter = counter + 1;
+endwhile;
+print sum;

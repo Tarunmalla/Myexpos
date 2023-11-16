@@ -1,0 +1,207 @@
+//INT 4
+//print("INT 4");
+alias syscallNum R1;
+alias ptbr R8;
+alias userSp R9;
+alias pte R10;
+
+
+pte = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16);
+ptbr = [ pte + 14];
+
+userSp = SP;
+[pte + 13] = SP;
+SP = [pte + 11] * 512 - 1;
+
+
+
+
+syscallNum = [[ptbr + 2*((userSp - 5)/512)] * 512 + (userSp - 5)%512]; 
+
+
+alias filename R2;
+alias retAddr R3;
+retAddr = [ptbr + 2*((userSp - 1)/512)] * 512 + (userSp - 1)%512;
+filename = [[ptbr + 2*((userSp - 4)/512)] * 512 + (userSp - 4)%512];
+
+//create 
+if(syscallNum == 1) then
+
+	
+	alias perm R4;
+	perm = [[ptbr + 2*((userSp - 3)/512)] * 512 + (userSp - 3)%512];
+	
+	[pte + 9] = 1;
+	
+	alias iter R5;
+	
+	iter = 0;
+	while(iter<MAX_FILE_NUM) do
+		
+		if([INODE_TABLE + iter* 16 + 1] == filename) then
+			[retAddr] = 0;
+			[pte + 9] = 0;
+			SP = userSp;
+			ireturn;
+		endif;
+		
+		iter = iter + 1;
+	endwhile;
+	
+	iter = 0;
+	while(iter<MAX_FILE_NUM) do
+		
+		if([INODE_TABLE + iter* 16 + 1] == -1) then
+			break;
+		endif;
+		
+		iter = iter + 1;
+	endwhile;
+	
+	if(iter == MAX_FILE_NUM) then
+		[retAddr] = -1;
+		[pte + 9] = 0;
+		SP = userSp;
+		ireturn;
+	endif;
+	
+	
+	[INODE_TABLE + iter*16] = DATA;
+	[INODE_TABLE + iter*16 + 1] = filename;
+	[INODE_TABLE + iter*16 + 2] = 0;
+	
+	[INODE_TABLE + iter*16 + 3] = [pte + 3];
+	[INODE_TABLE + iter*16 + 4] = perm;
+	
+	[INODE_TABLE + iter*16 + 8] = -1;
+	[INODE_TABLE + iter*16 + 9] = -1;
+	[INODE_TABLE + iter*16 + 10] = -1;
+	[INODE_TABLE + iter*16 + 11] = -1;
+	
+	
+	[ROOT_FILE + iter*8] = filename;
+	[ROOT_FILE + iter*8 + 1] = 0;
+	[ROOT_FILE + iter*8 + 2] = DATA;
+	[ROOT_FILE + iter*8 + 3] = [USER_TABLE + 2*[pte + 3]];
+	[ROOT_FILE + iter*8 + 4] = perm;
+	
+	
+	[retAddr] = 0;
+	[pte + 9] = 0;
+	SP = userSp;
+	ireturn;
+	
+	
+endif;
+
+//delete
+if(syscallNum == 4) then
+	
+	[pte + 9] = 4;
+	
+	
+	
+	alias iter R4;
+	
+	iter = 0;
+	while(iter<MAX_FILE_NUM) do
+		
+		if([INODE_TABLE + iter* 16 + 1] == filename) then
+			break;
+		endif;
+		
+		iter = iter + 1;
+	endwhile;
+	
+	if(iter == MAX_FILE_NUM) then
+		[retAddr] = 0;
+		[pte + 9] = 0;
+		SP = userSp;
+		ireturn;
+	endif;
+	
+	if([INODE_TABLE + iter * 16] != DATA) then
+		[retAddr] = -1;
+		[pte + 9] = 0;
+		SP = userSp;
+		ireturn;
+	endif;
+	
+	//if exclusive permission is set
+	if([INODE_TABLE + iter*16 + 4] == 0) then
+		
+		//if current user is not root and the current user doesnt own the file
+		if([INODE_TABLE + iter*16 + 3] != 1 && [INODE_TABLE + iter*16 + 3] != [pte + 3]) then
+			[retAddr] = -1;
+			[pte + 9] = 0;
+			SP = userSp;
+			ireturn;
+		endif;
+	endif;
+	
+	//Acquire Inode
+	multipush(R1,R2,R3,R4,R8,R9,R10);
+	R1 = 4;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = iter;
+	call MOD_0;
+	multipop(R1,R2,R3,R4,R8,R9,R10);
+	
+	if([FILE_STATUS_TABLE + iter* 4 + 1] != -1) then
+		[retAddr] = -2;
+		[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
+		SP = userSp;
+		ireturn;
+	endif;
+	
+	
+	alias i R5;
+	alias j R6;
+	
+	i = 0;
+	while(i < 4) do
+		if([INODE_TABLE + iter* 16 + 8 + i] != -1) then
+			j = 0;
+			while(j < 4) do
+				//if buffer entry for that file is dirty then reset cause we don't want it to be written back
+				if([BUFFER_TABLE + j*4] == [INODE_TABLE + iter*16 + 8 + i] && [BUFFER_TABLE + j*4 + 1] == 1) then
+					[BUFFER_TABLE + j*4 + 1] = 0;
+				endif;
+				j = j + 1;
+			endwhile;
+			
+			//call release block
+			multipush(R1,R2,R3,R4,R5,R6);
+			R1 = 4;
+			R2 = [INODE_TABLE + iter* 16 + 8 + i];
+			call MOD_2;
+			multipop(R1,R2,R3,R4,R5,R6);
+			
+		endif;
+		
+		i = i + 1;
+	endwhile;
+	
+	//invalidating inode table
+	i = 0;
+	while(i<16) do
+		[INODE_TABLE + iter*16 + i] = -1;
+		i = i + 1;
+	endwhile;
+	
+	//invalidating entry in root file
+	[ROOT_FILE + iter*8] = -1;
+
+	//release inode
+	multipush(R1,R2,R3,R4,R5,R6);
+	R1 = 5;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = iter;
+	call MOD_0;
+	multipop(R1,R2,R3,R4,R5,R6);
+	
+	[retAddr] = 0;
+	[pte + 9] = 0;
+	SP = userSp;
+	ireturn;
+endif;
