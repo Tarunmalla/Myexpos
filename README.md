@@ -1,12 +1,9 @@
-# MyExpos
-It is an experimental operating system created as a part of S5 Operating lab course and this operating system can do the following.
-1.Implementation of Basic Software and Hardware interrupts                                                                        
+# OS-Lab-Project
+Completed the implementation of a basic operating system as a part of S5 Operating Systems Lab course. The operating system was built for an XSM machine.
 
-2.Process Synchronization and Semaphores                                                                                          
-
-3.File Management                                                                                                                  
-
-4.User Management                                                                                                                 
-
-5.Pager Module                                                                                                                    
-
+Properties of the operating system
+ 1. Implementation for Basic Software and Hardware interrupts
+ 2. Process Synchronization and Semaphores
+ 3. File management
+ 4. User Management
+ 5. Pager Module
